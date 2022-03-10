@@ -53,14 +53,14 @@ type CveDescriptionData struct {
 	Value string `json:"value"`
 }
 
-type CveCsvData struct {
+type CveCsvElement struct {
 	CveId             string
 	PublishedDate     string
 	FirstReferenceUrl string
 	Description       string
 }
 
-func (c *CveCsvData) ToString() string {
+func (c *CveCsvElement) ToString() string {
 	var data bytes.Buffer
 	data.WriteString(c.CveId)
 	data.WriteString(",")
@@ -78,31 +78,25 @@ func normalizeDescription(description string) string {
 	return strconv.Quote(description)
 }
 
-func WriteCveCsvData(w *bufio.Writer, data []CveCsvData) {
+func WriteCveCsvData(w *bufio.Writer, data []CveCsvElement) {
 	for i := 0; i < len(data); i++ {
 		w.WriteString(data[i].ToString())
 	}
 	w.Flush()
 }
 
-func GetCveCsvData() ([]CveCsvData, error) {
-	//To Do
-	//Move this to a CveDataStream
+func GetCveCsvData() ([]CveCsvElement, error) {
 	content, err := getCveContent()
 	if err != nil {
-		return []CveCsvData{}, err
+		return []CveCsvElement{}, err
 	}
-	return convertToCveCsvData(content.Result.CveItems), nil
-	//Getting the data is a separate concern from converting to correct format. Its almost like I will need a cve.go
-	// dataStream := newDataStream()      // returns a Datastream object (an interface with get data method) I think the getData method can just return a io.Reader object
-	// dataBuffer := dataStream.getData() // returns a buffer
-
+	return convertToCveCsvElement(content.Result.CveItems), nil
 }
 
-func convertToCveCsvData(items []Item) []CveCsvData {
-	var data []CveCsvData
+func convertToCveCsvElement(items []Item) []CveCsvElement {
+	var data []CveCsvElement
 	for i := 0; i < len(items); i++ {
-		cve := CveCsvData{
+		cve := CveCsvElement{
 			items[i].Cve.Metadata.Id,
 			items[i].PublishedDate,
 			items[i].Cve.References.ReferenceData[0].Url,
