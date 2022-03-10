@@ -10,9 +10,7 @@ import (
 	"time"
 )
 
-type CsvData interface {
-	ToString() string
-}
+//Json Parsing Structs
 
 type Content struct {
 	Result Result `json:"result"`
@@ -53,6 +51,22 @@ type CveDescriptionData struct {
 	Value string `json:"value"`
 }
 
+type Data interface {
+	OutputString() string
+}
+
+type CveCsvData struct {
+	Data []CveCsvElement
+}
+
+func (d *CveCsvData) OutputString() string {
+	var output bytes.Buffer
+	for i := 0; i < len(d.Data); i++ {
+		output.WriteString(d.Data[i].OutputString())
+	}
+	return output.String()
+}
+
 type CveCsvElement struct {
 	CveId             string
 	PublishedDate     string
@@ -60,7 +74,7 @@ type CveCsvElement struct {
 	Description       string
 }
 
-func (c *CveCsvElement) ToString() string {
+func (c *CveCsvElement) OutputString() string {
 	var data bytes.Buffer
 	data.WriteString(c.CveId)
 	data.WriteString(",")
@@ -73,27 +87,30 @@ func (c *CveCsvElement) ToString() string {
 	return data.String()
 }
 
-func normalizeDescription(description string) string {
-	description = strings.TrimSpace(description)
-	return strconv.Quote(description)
+type Generator interface {
+	GetData() (Data, error)
+	Generate()
 }
 
-func WriteCveCsvData(w *bufio.Writer, data []CveCsvElement) {
-	for i := 0; i < len(data); i++ {
-		w.WriteString(data[i].ToString())
+type CveCsvGenerator struct {
+	Data CveCsvData
+}
+
+func (c *CveCsvGenerator) GetData() error {
+	content, err := getCveContent()
+	if err != nil {
+		return err
 	}
+	c.Data = convertToCveCsvElement(content.Result.CveItems)
+	return nil
+}
+
+func (c *CveCsvGenerator) OutputData(w *bufio.Writer) {
+	w.WriteString(c.Data.OutputString())
 	w.Flush()
 }
 
-func GetCveCsvData() ([]CveCsvElement, error) {
-	content, err := getCveContent()
-	if err != nil {
-		return []CveCsvElement{}, err
-	}
-	return convertToCveCsvElement(content.Result.CveItems), nil
-}
-
-func convertToCveCsvElement(items []Item) []CveCsvElement {
+func convertToCveCsvElement(items []Item) CveCsvData {
 	var data []CveCsvElement
 	for i := 0; i < len(items); i++ {
 		cve := CveCsvElement{
@@ -104,7 +121,7 @@ func convertToCveCsvElement(items []Item) []CveCsvElement {
 		}
 		data = append(data, cve)
 	}
-	return data
+	return CveCsvData{data}
 }
 
 func getCveContent() (Content, error) {
@@ -120,4 +137,9 @@ func getCveContent() (Content, error) {
 		return Content{}, err
 	}
 	return content, nil
+}
+
+func normalizeDescription(description string) string {
+	description = strings.TrimSpace(description)
+	return strconv.Quote(description)
 }

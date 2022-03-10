@@ -5,14 +5,14 @@ import (
 	"testing"
 )
 
-func TestConvertingCveCsvElementToString(t *testing.T) {
+func TestConvertingCveCsvElementOutputString(t *testing.T) {
 	data := CveCsvElement{
 		"CVE-2022-0697",
 		"2022-03-06T23:15Z",
 		"https://huntr.dev/bounties/2d0301a2-10ff-48f4-a346-5a0e8707835b",
 		"Open Redirect in GitHub repository archivy/archivy prior to 1.7.0.",
 	}
-	got := data.ToString()
+	got := data.OutputString()
 	expect := `CVE-2022-0697,2022-03-06T23:15Z,https://huntr.dev/bounties/2d0301a2-10ff-48f4-a346-5a0e8707835b,"Open Redirect in GitHub repository archivy/archivy prior to 1.7.0."`
 	if strings.Compare(got, expect) == 0 {
 		t.Errorf("expected `%s`, got `%s`", expect, got)
@@ -44,7 +44,7 @@ func TestConvertContentToCveCsvElement(t *testing.T) {
 	}
 	got := convertToCveCsvElement(content.Result.CveItems)
 
-	if len(got) == 0 {
+	if len(got.Data) == 0 {
 		t.Error("CveCsvElement Conversion failed")
 		return
 	}
@@ -55,11 +55,11 @@ func TestConvertContentToCveCsvElement(t *testing.T) {
 		"https://huntr.dev/bounties/2d0301a2-10ff-48f4-a346-5a0e8707835b",
 		"Open Redirect in GitHub repository archivy/archivy prior to 1.7.0.",
 	}
-	checkEqualCveCsvElement(t, got[0], expect)
+	checkEqualCveCsvElement(t, got.Data[0], expect)
 }
 
 func checkEqualCveCsvElement(t testing.TB, got, expect CveCsvElement) {
-	if got.ToString() != expect.ToString() {
-		t.Errorf("expected CveCsvElement of %s, got %s", expect.ToString(), got.ToString())
+	if got.OutputString() != expect.OutputString() {
+		t.Errorf("expected CveCsvElement of %s, got %s", expect.OutputString(), got.OutputString())
 	}
 }
