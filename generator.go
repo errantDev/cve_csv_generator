@@ -74,8 +74,6 @@ func (c *CveCsvData) ToString() string {
 }
 
 func normalizeDescription(description string) string {
-	description = strings.ReplaceAll(description, "\n", "")
-	description = strings.ReplaceAll(description, "\r", "")
 	description = strings.TrimSpace(description)
 	return strconv.Quote(description)
 }
